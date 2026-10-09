@@ -1,22 +1,22 @@
-# ---- Stage 1: build the React app ----
+# ---- Stage 1: build the Next.js app ----
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
 
-# Backend URL baked in at build time (works for Vite and Create React App)
-ARG VITE_API_URL
-ARG REACT_APP_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-ENV REACT_APP_API_URL=$REACT_APP_API_URL
+# Backend URL baked in at build time (only needed if your code uses it)
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN npm run build
-# Vite outputs to dist/, Create React App outputs to build/
-RUN mkdir -p /out && (cp -r dist/. /out/ 2>/dev/null || cp -r build/. /out/)
+RUN npm prune --omit=dev
 
-# ---- Stage 2: serve static files with nginx ----
-FROM nginx:alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /out /usr/share/nginx/html
-EXPOSE 80
+# ---- Stage 2: run it ----
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build --chown=node:node /app ./
+USER node
+EXPOSE 3000
+CMD ["npm", "start"]
