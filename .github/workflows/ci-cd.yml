@@ -46,13 +46,13 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: youtube/package-lock.json
-           - run: npm ci
+      - run: npm ci
       - run: npm run lint --if-present
         continue-on-error: true   # TODO: fix the 'any' types, then remove this line
       - run: npm test --if-present
       - run: npm run build
         env:
-          CI: false   # stops Create React App treating warnings as errors
+          CI: false
 
   # ---------- CD: build and push both images (main only) ----------
   docker:
